@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonebook</title>
+    <script>
+        function validatePhoneNumber(input) {
+            input.value = input.value.replace(/\D/g, ''); 
+        }
+        function validateForm(form) {
+            const fullName = form.elements['full_name'].value.trim();
+            const phoneNumber = form.elements['phone_number'].value.trim();
+            if (!fullName || !phoneNumber) {
+                alert('Поля "ФИО" и "Номер телефона" обязательны для заполнения!');
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <h1>Phonebook</h1>
+    <form action="/add" method="POST" onsubmit="return validateForm(this)">
+        <input type="text" name="full_name" placeholder="ФИО" required>
+        <input type="text" name="phone_number" placeholder="Номер телефона" oninput="validatePhoneNumber(this)" required>
+        <input type="text" name="note" placeholder="Заметка">
+        <button type="submit">Добавить контакт</button>
+    </form>
+    <ul>
+        {% for contact in contacts %}
+        <li>
+            <form action="/edit/{{ contact[0] }}" method="POST" onsubmit="return validateForm(this)" style="display:inline;">
+                <input type="text" name="full_name" value="{{ contact[1] }}" required>
+                <input type="text" name="phone_number" value="{{ contact[2] }}" oninput="validatePhoneNumber(this)" required>
+                <input type="text" name="note" value="{{ contact[3] }}">
+                <button type="submit">Изменить</button>
+            </form>
+            <a href="/delete/{{ contact[0] }}">Удалить</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
