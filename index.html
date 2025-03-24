@@ -7,44 +7,39 @@
         ul { list-style: none; padding: 0; }
         li { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        input:invalid { border-color: #f44336; }
         button { padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background-color: #45a049; }
         a { color: #f44336; text-decoration: none; margin-left: 10px; }
         a:hover { text-decoration: underline; }
+        .error { color: #f44336; font-size: 0.9em; }
     </style>
     <script>
         function formatPhone(input) {
             let value = input.value;
             let cursorPos = input.selectionStart;
-            
-            // Разрешаем + только в начале
             const hasPlus = value.startsWith('+');
             let cleaned = hasPlus ? '+' : '';
-            
-            // Удаляем ВСЕ нецифровые символы
             cleaned += value.replace(/[^0-9]/g, '');
-            
-            // Ограничиваем длину
-            if (cleaned.length > 15) {
-                cleaned = cleaned.substring(0, 15);
-                cursorPos = 15;
+            if (cleaned.length > 20) {
+                cleaned = cleaned.substring(0, 20);
+                cursorPos = 20;
             }
             
             input.value = cleaned;
             input.setSelectionRange(cursorPos, cursorPos);
+            const errorElement = input.nextElementSibling;
+            if (errorElement && errorElement.classList.contains('error')) {
+                errorElement.style.display = cleaned.length > 20 ? 'block' : 'none';
+            }
         }
 
         function validateForm(form) {
-            const fullName = form.elements['full_name'].value.trim();
-            const phoneNumber = form.elements['phone_number'].value;
+            const phoneInput = form.elements['phone_number'];
+            const phoneNumber = phoneInput.value;
             
-            if (!fullName) {
-                alert('Поле "ФИО" обязательно для заполнения!');
-                return false;
-            }
-            
-            if (!/^\+?[0-9]{10,15}$/.test(phoneNumber)) {
-                alert('Номер должен содержать 10-15 цифр и может начинаться с +');
+            if (!/^\+?[0-9]{1,20}$/.test(phoneNumber)) {
+                alert('Номер должен содержать от 1 до 20 цифр и может начинаться с +');
                 return false;
             }
             
@@ -57,10 +52,12 @@
     <form action="/add" method="POST" onsubmit="return validateForm(this)">
         <input type="text" name="full_name" placeholder="ФИО" required>
         <input type="text" name="phone_number" placeholder="Номер телефона" 
-               oninput="formatPhone(this)" 
+               oninput="formatPhone(this)"
                onkeydown="return /[0-9+]|Backspace|Delete|Arrow/.test(event.key)"
-               pattern="^\+?[0-9]{10,15}$"
+               pattern="^\+?[0-9]{1,20}$"
+               maxlength="21"  <!-- + и 20 цифр -->
                required>
+        <div class="error" style="display: none;">Максимум 20 цифр</div>
         <input type="text" name="note" placeholder="Заметка">
         <button type="submit">Добавить</button>
     </form>
@@ -73,8 +70,10 @@
                 <input type="text" name="phone_number" value="{{ contact[0] }}" 
                        oninput="formatPhone(this)"
                        onkeydown="return /[0-9+]|Backspace|Delete|Arrow/.test(event.key)"
-                       pattern="^\+?[0-9]{10,15}$"
+                       pattern="^\+?[0-9]{1,20}$"
+                       maxlength="21"
                        required>
+                <div class="error" style="display: none;">Максимум 20 цифр</div>
                 <input type="text" name="note" value="{{ contact[2] }}">
                 <button type="submit">Изменить</button>
             </form>
