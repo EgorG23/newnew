@@ -1,34 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phonebook</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        a { color: #f44336; text-decoration: none; margin-left: 10px; }
+        a:hover { text-decoration: underline; }
+    </style>
     <script>
-        function validatePhoneNumber(input) {
+        function formatPhone(input) {
             let value = input.value;
-            if (value.length === 1 && value === '+') {
-                return;
+            let cursorPos = input.selectionStart;
+            
+            // Разрешаем + только в начале
+            const hasPlus = value.startsWith('+');
+            let cleaned = hasPlus ? '+' : '';
+            
+            // Удаляем ВСЕ нецифровые символы
+            cleaned += value.replace(/[^0-9]/g, '');
+            
+            // Ограничиваем длину
+            if (cleaned.length > 15) {
+                cleaned = cleaned.substring(0, 15);
+                cursorPos = 15;
             }
-            input.value = value.replace(/[^0-9]/g, '');
+            
+            input.value = cleaned;
+            input.setSelectionRange(cursorPos, cursorPos);
         }
+
         function validateForm(form) {
             const fullName = form.elements['full_name'].value.trim();
-            const phoneNumber = form.elements['phone_number'].value.trim();
-            if (!fullName || !phoneNumber) {
-                alert('Поля "ФИО" и "Номер телефона" обязательны для заполнения!');
+            const phoneNumber = form.elements['phone_number'].value;
+            
+            if (!fullName) {
+                alert('Поле "ФИО" обязательно для заполнения!');
                 return false;
             }
+            
+            if (!/^\+?[0-9]{10,15}$/.test(phoneNumber)) {
+                alert('Номер должен содержать 10-15 цифр и может начинаться с +');
+                return false;
+            }
+            
             return true;
         }
     </script>
 </head>
 <body>
-    <h1>Phonebook</h1>
+    <h1>Телефонная книга</h1>
     <form action="/add" method="POST" onsubmit="return validateForm(this)">
         <input type="text" name="full_name" placeholder="ФИО" required>
         <input type="text" name="phone_number" placeholder="Номер телефона" 
-               oninput="formatPhone(this)" required>
+               oninput="formatPhone(this)" 
+               onkeydown="return /[0-9+]|Backspace|Delete|Arrow/.test(event.key)"
+               pattern="^\+?[0-9]{10,15}$"
+               required>
         <input type="text" name="note" placeholder="Заметка">
         <button type="submit">Добавить</button>
     </form>
@@ -39,11 +71,14 @@
             <form action="/edit/{{ contact[0] }}" method="POST" onsubmit="return validateForm(this)" style="display:inline;">
                 <input type="text" name="full_name" value="{{ contact[1] }}" required>
                 <input type="text" name="phone_number" value="{{ contact[0] }}" 
-                       oninput="formatPhone(this)" required>
+                       oninput="formatPhone(this)"
+                       onkeydown="return /[0-9+]|Backspace|Delete|Arrow/.test(event.key)"
+                       pattern="^\+?[0-9]{10,15}$"
+                       required>
                 <input type="text" name="note" value="{{ contact[2] }}">
                 <button type="submit">Изменить</button>
             </form>
-            <a href="/delete/{{ contact[0] }}">Удалить</a>
+            <a href="/delete/{{ contact[0] }}" onclick="return confirm('Удалить контакт?')">Удалить</a>
         </li>
         {% endfor %}
     </ul>
