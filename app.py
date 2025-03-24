@@ -28,10 +28,11 @@ def add():
     phone_number = request.form['phone_number'].strip()
     note = request.form['note'].strip()
 
-    if not full_name or not phone_number:
-        return "Поля 'ФИО' и 'Номер телефона' обязательны!", 400
+    # Валидация
+    if not full_name:
+        return "Поле 'ФИО' обязательно для заполнения!", 400
     
-    if not re.match(r'^\+?[0-9]{10,15}$', phone_number):
+    if not re.fullmatch(r'^\+?[0-9]{10,15}$', phone_number):
         return "Номер должен содержать 10-15 цифр и может начинаться с +", 400
 
     conn = get_db_connection()
@@ -44,28 +45,33 @@ def add():
         conn.commit()
     except psycopg2.IntegrityError:
         return "Контакт с таким номером уже существует!", 400
+    except Exception as e:
+        return f"Ошибка: {str(e)}", 500
     finally:
         cur.close()
         conn.close()
     
     return redirect(url_for('index'))
 
-@app.route('/edit/<phone_number>', methods=['POST'])
-def edit(phone_number):
+@app.route('/edit/<old_phone>', methods=['POST'])
+def edit(old_phone):
     new_phone = request.form['phone_number'].strip()
     full_name = request.form['full_name'].strip()
     note = request.form['note'].strip()
-    if not full_name or not new_phone:
-        return "Поля 'ФИО' и 'Номер телефона' обязательны!", 400
+
+    # Валидация
+    if not full_name:
+        return "Поле 'ФИО' обязательно для заполнения!", 400
     
-    if not re.match(r'^\+?[0-9]{10,15}$', new_phone):
+    if not re.fullmatch(r'^\+?[0-9]{10,15}$', new_phone):
         return "Номер должен содержать 10-15 цифр и может начинаться с +", 400
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        if new_phone != phone_number:
-            cur.execute('DELETE FROM contacts WHERE phone_number = %s', (phone_number,))
+        # Если номер изменился
+        if new_phone != old_phone:
+            cur.execute('DELETE FROM contacts WHERE phone_number = %s', (old_phone,))
         
         cur.execute(
             'INSERT INTO contacts (phone_number, full_name, note) VALUES (%s, %s, %s) '
@@ -74,7 +80,7 @@ def edit(phone_number):
         )
         conn.commit()
     except Exception as e:
-        return f"Ошибка: {str(e)}", 400
+        return f"Ошибка: {str(e)}", 500
     finally:
         cur.close()
         conn.close()
@@ -85,10 +91,14 @@ def edit(phone_number):
 def delete(phone_number):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('DELETE FROM contacts WHERE phone_number = %s', (phone_number,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    try:
+        cur.execute('DELETE FROM contacts WHERE phone_number = %s', (phone_number,))
+        conn.commit()
+    except Exception as e:
+        return f"Ошибка: {str(e)}", 500
+    finally:
+        cur.close()
+        conn.close()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
