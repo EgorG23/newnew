@@ -6,7 +6,11 @@
     <title>Phonebook</title>
     <script>
         function validatePhoneNumber(input) {
-            input.value = input.value.replace(/\D/g, ''); 
+            let value = input.value;
+            if (value.length === 1 && value === '+') {
+                return;
+            }
+            input.value = value.replace(/[^0-9]/g, '');
         }
         function validateForm(form) {
             const fullName = form.elements['full_name'].value.trim();
