@@ -11,18 +11,6 @@
                 return;
             }
             input.value = value.replace(/[^0-9]/g, '');
-
-            let value = input.value;
-            const hasPlus = value.startsWith('+');
-            let cleaned = hasPlus ? '+' : '';
-            cleaned += value.replace(hasPlus ? /[^0-9]/g : /[^0-9+]/g, '');
-            if (cleaned.includes('+') && !cleaned.startsWith('+')) {
-                cleaned = cleaned.replace('+', '');
-            } 
-            if (cleaned.length > 15) {
-                cleaned = cleaned.substring(0, 15);
-            }
-            input.value = cleaned;
         }
         function validateForm(form) {
             const fullName = form.elements['full_name'].value.trim();
