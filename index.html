@@ -27,17 +27,20 @@
     <h1>Phonebook</h1>
     <form action="/add" method="POST" onsubmit="return validateForm(this)">
         <input type="text" name="full_name" placeholder="ФИО" required>
-        <input type="text" name="phone_number" placeholder="Номер телефона" oninput="validatePhoneNumber(this)" required>
+        <input type="text" name="phone_number" placeholder="Номер телефона" 
+               oninput="formatPhone(this)" required>
         <input type="text" name="note" placeholder="Заметка">
-        <button type="submit">Добавить контакт</button>
+        <button type="submit">Добавить</button>
     </form>
+
     <ul>
         {% for contact in contacts %}
         <li>
             <form action="/edit/{{ contact[0] }}" method="POST" onsubmit="return validateForm(this)" style="display:inline;">
                 <input type="text" name="full_name" value="{{ contact[1] }}" required>
-                <input type="text" name="phone_number" value="{{ contact[2] }}" oninput="validatePhoneNumber(this)" required>
-                <input type="text" name="note" value="{{ contact[3] }}">
+                <input type="text" name="phone_number" value="{{ contact[0] }}" 
+                       oninput="formatPhone(this)" required>
+                <input type="text" name="note" value="{{ contact[2] }}">
                 <button type="submit">Изменить</button>
             </form>
             <a href="/delete/{{ contact[0] }}">Удалить</a>
